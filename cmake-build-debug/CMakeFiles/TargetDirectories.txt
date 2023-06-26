@@ -1,0 +1,3 @@
+/mnt/c/Y2/Q4/OS2/w57/chr_dev/cmake-build-debug/CMakeFiles/chr_dev.dir
+/mnt/c/Y2/Q4/OS2/w57/chr_dev/cmake-build-debug/CMakeFiles/edit_cache.dir
+/mnt/c/Y2/Q4/OS2/w57/chr_dev/cmake-build-debug/CMakeFiles/rebuild_cache.dir
