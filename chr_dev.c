@@ -10,6 +10,7 @@
 static const char g_s_welcome[] = "Henlo, this is driver >.<\n\0";
 static const ssize_t g_s_welcome_sz = sizeof(g_s_welcome);
 
+
 static ssize_t df_read(struct file *fp, char __user *buffer, size_t count, loff_t *pos){
     printk(KERN_NOTICE "Serafimov-driver: Read at offset [%i]. Read bytes [%u]", (int)(*pos), (unsigned int) count);
     //if done reading
@@ -29,28 +30,31 @@ static struct file_operations serafimov_driver_fops =
         .read = df_read,
         };
 
-static int maj_num = 0;
 static const char name[] = "Serafimov-driver";
+static const char name_class[] = "Serafimov-class";
 
+static struct cdev ser_dev;
+static struct class *ser_class;
+static dev_t nums;
 
 int register_device(void){
-    //get major number
-    int ret_val = register_chrdev(0, name, &serafimov_driver_fops);
-    printk(KERN_NOTICE "Serafimov-driver: Registering device\n");
-    //major number < 0 means error
-    if (ret_val < 0){
-        printk(KERN_WARNING "Serafimov-driver: Cannot register device (Error code [%i], Line [%i])\n", ret_val, __LINE__);
-        return ret_val;
-    }
-    maj_num = ret_val;
-    printk(KERN_NOTICE "Serafimov-driver: Registered device (Major number [%i]\n", maj_num);
+    //register device
+    alloc_chrdev_region(&nums, 0, 1, name);
+    //register device class
+    ser_class = class_create(THIS_MODULE, name_class);
+    if (ser_class == NULL || MAJOR(nums) < 0) return -1;
+    //initialize device with the given file ops
+    cdev_init(&ser_dev, &serafimov_driver_fops);
+    device_create(ser_class, NULL, nums, NULL, "Serafimov-device");
+    printk(KERN_NOTICE "Serafimov-driver: Registered device\n");
+    cdev_add(&ser_dev, nums, 1);
     return 0;
 }
 
 
 void unregister_device(void){
     printk(KERN_NOTICE "Serafimov-driver: Unregistering device\n");
-    if(maj_num != 0){
-        unregister_chrdev(maj_num, name);
+    if(MAJOR(nums) != 0){
+        cdev_del(&ser_dev);
     }
 }
