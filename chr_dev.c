@@ -42,6 +42,49 @@ static ssize_t df_write(struct file *fp, const char __user *buffer, size_t count
     return len;
 }
 
+//struct for writing a character to an index
+struct int_ch{
+    int val_int;
+    char val_ch;
+};
+
+//unique magic number
+#define M_NUM 238
+#define R_CHAR _IOR(M_NUM, 1, int *)
+#define W_CHAR _IOW(M_NUM, 2, struct int_ch *)
+
+
+static long int df_ioctl(struct file* fp, unsigned cmd, unsigned long arg){
+    //user space variables stored in here
+    struct int_ch temp;
+    switch(cmd){
+        case R_CHAR:
+            //get value of argument
+            if (copy_from_user(&temp.val_int, (int *)arg, sizeof(temp.val_int)) != 0) return -EFAULT;
+            //read character at index if in range
+            if (temp.val_int < g_s_welcome_sz)
+                printk(KERN_NOTICE "Serafimov-driver: Character at [%d] is [%c]\n", temp.val_int, g_s_welcome[temp.val_int]);
+            else printk(KERN_NOTICE "Serafimov-driver: Out of bounds read, returning\n");
+            return 0;
+            break;
+        case W_CHAR:
+            //copy char and int from user
+            if (copy_from_user(&temp, (struct int_ch *)arg, sizeof(temp)) != 0) return -EFAULT;
+            //write if in range
+            if (temp.val_int < g_s_welcome_sz) {
+                printk(KERN_NOTICE
+                "Serafimov-driver: Writing [%c] at [%d]\n", temp.val_ch, temp.val_int);
+                g_s_welcome[temp.val_int] = temp.val_ch;
+            }
+            else printk(KERN_NOTICE "Serafimov-driver: Out of bounds write, returning\n");
+            return 0;
+            break;
+        default:
+            printk(KERN_NOTICE "Serafimov-driver: Non-existent ioctl call\n");
+            return -ENOTTY;
+    }
+}
+
 static struct file_operations serafimov_driver_fops =
         {
         .owner = THIS_MODULE,
@@ -49,6 +92,7 @@ static struct file_operations serafimov_driver_fops =
         .write = df_write,
         .open = df_open,
         .release = df_release,
+        .unlocked_ioctl = df_ioctl,
         };
 
 static const char name[] = "Serafimov-driver";

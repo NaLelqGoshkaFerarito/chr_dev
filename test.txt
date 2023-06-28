@@ -1,0 +1,33 @@
+//ioctl test
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+
+//struct for writing a character to an index
+struct int_ch{
+    int val_int;
+    char val_ch;
+};
+
+//unique magic number
+#define M_NUM 238
+#define R_CHAR _IOR(M_NUM, 1, int *)
+#define W_CHAR _IOW(M_NUM, 2, struct int_ch *)
+
+int main(){
+    int arg1 = 2;
+    struct int_ch arg2 = {2, 'i'};
+    int arg3 = 3;
+    int dev = open("/dev/Serafimov-device", O_WRONLY);
+    if(dev == -1) {
+    		printf("Opening failed, exiting\n");
+    		return -1;
+    	}
+    ioctl(dev, R_CHAR, &arg1);
+    ioctl(dev, R_CHAR, &arg3);
+    ioctl(dev, W_CHAR, &arg2);
+    close(dev);
+    return 0;
+}
