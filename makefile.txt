@@ -1,8 +1,7 @@
-  GNU nano 6.2                                                                                                                        Makefile                                                                                                                           M
-TARGET := chr_dev
+TARGET := ser_dev
 $(TARGET)-objs := main.o chr_dev.o
 obj-m += $(TARGET).o
-
+KBUILD_CFLAGS   +=  -g -Wall
 all:
         make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
 
@@ -12,4 +11,3 @@ load:
         insmod ./$(TARGET).ko
 unload:
         rmmod ./$(TARGET).ko
-

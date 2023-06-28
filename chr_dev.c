@@ -7,12 +7,11 @@
 #include <linux/uaccess.h>
 
 
-static const char g_s_welcome[] = "Henlo, this is driver >.<\n\0";
+static char g_s_welcome[] = "Henlo, this is driver >.<\n\0";
 static const ssize_t g_s_welcome_sz = sizeof(g_s_welcome);
 
-
 static ssize_t df_read(struct file *fp, char __user *buffer, size_t count, loff_t *pos){
-    printk(KERN_NOTICE "Serafimov-driver: Read at offset [%i]. Read bytes [%u]", (int)(*pos), (unsigned int) count);
+    printk(KERN_NOTICE "Serafimov-driver: Read at offset [%i]. Read bytes [%u]\n", (int)(*pos), (unsigned int) count);
     //if done reading
     if (*pos >= g_s_welcome_sz) return 0;
     //if trying to read out of bounds read only as much as available
@@ -23,11 +22,21 @@ static ssize_t df_read(struct file *fp, char __user *buffer, size_t count, loff_
     return count;
 }
 
+static ssize_t df_write(struct file *fp, const char __user *buffer, size_t count, loff_t *pos){
+    printk(KERN_NOTICE "Serafimov-driver: Write at offset [%i]. Wrote [%u] bytes\n", (int)(*pos), (unsigned int) count);
+    ssize_t len = min(g_s_welcome_sz - *pos, count);
+    if (len <= 0) return 0;
+    if (copy_from_user(g_s_welcome + *pos, buffer, len) != 0) return -EFAULT;
+    printk(KERN_NOTICE "Serafimov-driver: Finished writing to user\n");
+    *pos += len;
+    return len;
+}
 
 static struct file_operations serafimov_driver_fops =
         {
         .owner = THIS_MODULE,
         .read = df_read,
+        .write = df_write,
         };
 
 static const char name[] = "Serafimov-driver";
@@ -55,6 +64,8 @@ int register_device(void){
 void unregister_device(void){
     printk(KERN_NOTICE "Serafimov-driver: Unregistering device\n");
     if(MAJOR(nums) != 0){
+        unregister_chrdev_region(0, 1);
         cdev_del(&ser_dev);
+        class_destroy(ser_class);
     }
 }
