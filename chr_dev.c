@@ -95,24 +95,31 @@ static struct file_operations serafimov_driver_fops =
         .unlocked_ioctl = df_ioctl,
         };
 
-static const char name[] = "Serafimov-driver";
-static const char name_class[] = "Serafimov-class";
+static const char name[] = "serafimov_driver";
+static const char name_class[] = "serafimov_class";
 
-static struct cdev ser_dev;
+#define N_OF_DEVICES 2
+static struct cdev ser_dev[N_OF_DEVICES];
 static struct class *ser_class;
 static dev_t nums;
 
 int register_device(void){
+    dev_t curr_dev;
     //register device
-    alloc_chrdev_region(&nums, 0, 1, name);
+    alloc_chrdev_region(&nums, 0, N_OF_DEVICES, name);
     //register device class
     ser_class = class_create(THIS_MODULE, name_class);
     if (ser_class == NULL || MAJOR(nums) < 0) return -1;
-    //initialize device with the given file ops
-    cdev_init(&ser_dev, &serafimov_driver_fops);
-    device_create(ser_class, NULL, nums, NULL, "Serafimov-device");
-    printk(KERN_NOTICE "Serafimov-driver: Registered device\n");
-    cdev_add(&ser_dev, nums, 1);
+    for (int i = 0; i < N_OF_DEVICES; ++i) {
+        //initialize device with the given file ops
+        cdev_init(&ser_dev[i], &serafimov_driver_fops);
+        curr_dev = MKDEV(MAJOR(nums), MINOR(nums) + i);
+        //create devices with uniqe ids
+        device_create(ser_class, NULL, , NULL, "serafimov_dev%d", i);
+        printk(KERN_NOTICE "Serafimov-driver: Registered device MAJ:[%d], MIN:[%d]\n", MAJOR(curr_dev), MINOR(curr_dev));
+        //make device accessible
+        cdev_add(&ser_dev[i], MKDEV(MAJOR(nums), MINOR(curr_dev) + i), 1);
+    }
     return 0;
 }
 
@@ -120,8 +127,10 @@ int register_device(void){
 void unregister_device(void){
     printk(KERN_NOTICE "Serafimov-driver: Unregistering device\n");
     if(MAJOR(nums) != 0){
-        unregister_chrdev_region(0, 1);
-        cdev_del(&ser_dev);
+        unregister_chrdev_region(0, N_OF_DEVICES);
+        for (int i = 0; i < N_OF_DEVICES; ++i) {
+            cdev_del(&ser_dev[i]);
+        }
         class_destroy(ser_class);
     }
 }

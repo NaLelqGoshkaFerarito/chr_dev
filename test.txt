@@ -20,7 +20,7 @@ int main(){
     int arg1 = 2;
     struct int_ch arg2 = {2, 'i'};
     int arg3 = 3;
-    int dev = open("/dev/Serafimov-device", O_WRONLY);
+    int dev = open("/dev/serafimov_dev0", O_WRONLY);
     if(dev == -1) {
     		printf("Opening failed, exiting\n");
     		return -1;
@@ -29,5 +29,17 @@ int main(){
     ioctl(dev, R_CHAR, &arg3);
     ioctl(dev, W_CHAR, &arg2);
     close(dev);
+
+    arg1 = 4;
+    struct int_ch arg4 = {5, 'b'};
+    arg3 = 50;
+    dev = open("/dev/serafimov_dev1", O_WRONLY);
+        if(dev == -1) {
+        		printf("Opening failed, exiting\n");
+        		return -1;
+        	}
+        ioctl(dev, R_CHAR, &arg1);
+        ioctl(dev, R_CHAR, &arg3);
+        ioctl(dev, W_CHAR, &arg4);
     return 0;
 }
