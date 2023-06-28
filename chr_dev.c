@@ -10,6 +10,16 @@
 static char g_s_welcome[] = "Henlo, this is driver >.<\n\0";
 static const ssize_t g_s_welcome_sz = sizeof(g_s_welcome);
 
+static int df_open(struct inode *inodest, struct file *fp){
+    printk(KERN_NOTICE "Serafimov-driver: Opened [%s]\n", fp->f_path.dentry->d_iname);
+    return 0;
+}
+
+static int df_release(struct inode *inodest, struct file *fp){
+    printk(KERN_NOTICE "Serafimov-driver: Releasing [%s]\n", fp->f_path.dentry->d_iname);
+    return 0;
+}
+
 static ssize_t df_read(struct file *fp, char __user *buffer, size_t count, loff_t *pos){
     printk(KERN_NOTICE "Serafimov-driver: Read at offset [%i]. Read bytes [%u]\n", (int)(*pos), (unsigned int) count);
     //if done reading
@@ -37,6 +47,8 @@ static struct file_operations serafimov_driver_fops =
         .owner = THIS_MODULE,
         .read = df_read,
         .write = df_write,
+        .open = df_open,
+        .release = df_release,
         };
 
 static const char name[] = "Serafimov-driver";
