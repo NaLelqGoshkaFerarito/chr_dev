@@ -1,1 +1,0 @@
-/usr/bin/cc -g CMakeFiles/chr_dev.dir/main.c.o CMakeFiles/chr_dev.dir/chr_dev.c.o -o chr_dev 
